@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Text;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace DiscoveryRenamer
 {
@@ -36,8 +34,23 @@ namespace DiscoveryRenamer
                     if (goAnswers.Contains(response.ToLower()))
                     {
                         // let 'er rip!
-                        ExamineDirectory(startingDirectory, ref changeCounter);
-                        Console.WriteLine("\n COMPLETED - {0} directories/files renamed.", changeCounter);
+                        Stopwatch stopWatch = new Stopwatch();
+                        try
+                        {
+                            stopWatch.Start();
+                            ExamineDirectory(startingDirectory, ref changeCounter);
+                            stopWatch.Stop();
+                            TimeSpan ts = stopWatch.Elapsed;
+                            Console.WriteLine("\n COMPLETED - {0} directories/files renamed.", changeCounter);
+                            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+                                ts.Hours, ts.Minutes, ts.Seconds,
+                                ts.Milliseconds / 10);
+                            Console.WriteLine(" Elapsed Time: " + elapsedTime);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(" ERROR: " + ex.Message);
+                        }
                     }
                     else
                     {
@@ -138,6 +151,11 @@ namespace DiscoveryRenamer
             // if that results in an empty string, then "cleaned" is returned
             string pattern = @"[^a-zA-Z\d-_]";
             Regex r = new Regex(pattern);
+
+            // first replace all spaces with underscores
+            itemname = itemname.Replace(" ", "_");
+
+            // now strip out all unwanted characters
             string output = r.Replace(itemname, "");
             if (string.IsNullOrEmpty(output))
             {
@@ -165,19 +183,21 @@ namespace DiscoveryRenamer
 
         static void ShowHelp()
         {
-            Console.WriteLine(" ====================================================================");
-            Console.WriteLine(" DirectoryRenamer");
-            Console.WriteLine(" ====================================================================");
+            Console.WriteLine(" =======================================================================");
+            Console.WriteLine(" DiscoveryRenamer");
+            Console.WriteLine(" =======================================================================");
             Console.WriteLine(" This utility will rename directories and all files contained");
             Console.WriteLine(" so that they only consist of alphanumeric characters, underscore,");
             Console.WriteLine(" or dash.  If this would result in a duplicate name, digits will");
             Console.WriteLine(" be added to keep the item unique.  The starting directory will NOT");
             Console.WriteLine(" be altered.\n");
-            Console.WriteLine(" USAGE: DirectoryRenamer <starting directory>\n");
+            Console.WriteLine(" USAGE: DiscoveryRenamer <starting directory>\n");
             Console.WriteLine(" The starting directory must be the full path including drive letter.");
             Console.WriteLine(" If the starting directory path contains spaces, it must be enclosed");
-            Console.WriteLine(" by double quotation marks.");
-            Console.WriteLine(" ====================================================================");
+            Console.WriteLine(" by double quotation marks.\n");
+            Console.WriteLine(" You must also have read & write permissions for the starting directory");
+            Console.WriteLine(" and all files and directories it contains.");
+            Console.WriteLine(" =======================================================================");
         }
     }
 }
